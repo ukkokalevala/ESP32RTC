@@ -1,0 +1,43 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+#define uS_TO_S_FACTOR 100000  // Conversion factor for microseconds to seconds
+#define TIME_TO_SLEEP 600       // Sleep time in seconds (1 minutes)
+
+// LCD 1602 I2C Setup (address 0x27, 16 columns, 2 rows)
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+RTC_DATA_ATTR int bootCount = 0;  // Retains value after deep sleep
+
+void setup() {
+    Serial.begin(115200);
+    Wire.begin(7, 6);
+    pinMode(LED_BUILTIN, OUTPUT);
+
+    // Increment boot count
+    bootCount++;
+
+    // Initialize LCD
+    lcd.begin(16, 2);
+    lcd.backlight();
+    lcd.clear();
+    
+    // Display boot count on LCD
+    lcd.setCursor(0, 0);
+    lcd.print("Boot: ");
+    lcd.print(bootCount);
+
+    // Blink onboard LED for 1 second
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(1000);
+    digitalWrite(LED_BUILTIN, LOW);
+
+    // Enable deep sleep for 10 minutes
+    Serial.println("Going to sleep...");
+    esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+    esp_deep_sleep_start();
+}
+
+void loop() {
+    // ESP32 never reaches this, as it goes to deep sleep
+}
